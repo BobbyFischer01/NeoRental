@@ -4,6 +4,7 @@ import com.mnoqc.member.dto.MemberDTO;
 import com.mnoqc.member.entity.MemberEntity;
 import com.mnoqc.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder; // 추가됨
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -11,39 +12,47 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class MemberService {
-    private final MemberRepository memberRepository;
 
-    // memberDTO 객체(회원정보)를 데이터베이스에 저장하는 메소드
+    private final MemberRepository memberRepository;
+    private final PasswordEncoder passwordEncoder; // 코드가 추가됨 (설정파일에서 등록한 빈 주입)
+
+    // 회원가입 (암호화하여 저장)
     public void save(MemberDTO memberDTO) {
-        // 1. dto -> entity 변환
+        // 1. 사용자가 입력한 비밀번호를 꺼냄
+        String originalPassword = memberDTO.getMemberPassword();
+
+        // 2. 암호화 진행 (1234 -> $2a$10$t2...)
+        String encodedPassword = passwordEncoder.encode(originalPassword);
+
+        // 3. DTO에 암호화된 비밀번호를 다시 세팅 (혹은 Entity 변환 시 사용)
+        memberDTO.setMemberPassword(encodedPassword);
+
+        // 4. 변환 및 저장
         MemberEntity memberEntity = MemberEntity.toMemberEntity(memberDTO);
-        // 2. repository의 save 메소드를 호출하여 MemberEntity 저장
         memberRepository.save(memberEntity);
-        // repository의 save 메서드 호출 (조건: Entity 객체를 넘겨줘야 함)
     }
 
+    // 로그인 (암호화된 비번과 비교)
     public MemberDTO login(MemberDTO memberDTO) {
-    /*
-        1. 회원이 입력한 이메일로 DB에서 조회를 함
-        2. DB에서 조회한 비밀번호와 사용자가 입력한 비밀번호가 일치하는지 판단
-    */
+        // 1. 이메일로 회원 조회
         Optional<MemberEntity> byMemberEmail = memberRepository.findByMemberEmail(memberDTO.getMemberEmail());
 
         if (byMemberEmail.isPresent()) {
-            // 조회 결과가 있다(해당 이메일을 가진 회원 정보가 있다)
             MemberEntity memberEntity = byMemberEmail.get();
 
-            // 비밀번호 일치 여부 확인 (단순 문자열 비교)
-            if (memberEntity.getMemberPassword().equals(memberDTO.getMemberPassword())) {
-                // 비밀번호 일치 -> entity -> dto 변환 후 리턴
-                MemberDTO loginResult = MemberDTO.toMemberDTO(memberEntity); // 변환 메서드는 엔티티에 구현 필요
-                return loginResult;
+            // [중요] 2. 비밀번호 비교 (matches 메서드 사용 필수!)
+            // passwordEncoder.matches(입력받은_평문_비번, DB에_저장된_암호화_비번)
+            // 암호화된 비밀번호는 매번 달라도 내부적으로 해독해서 맞는지 확인해줌
+            if (passwordEncoder.matches(memberDTO.getMemberPassword(), memberEntity.getMemberPassword())) {
+                // 비밀번호 일치 -> DTO 변환 후 리턴 (비번 필드는 뺀 상태로)
+                MemberDTO dto = MemberDTO.toMemberDTO(memberEntity);
+                return dto;
             } else {
-                // 비밀번호 불일치(로그인 실패)
+                // 비밀번호 불일치
                 return null;
             }
         } else {
-            // 조회 결과가 없다(해당 이메일이 없다)
+            // 조회 결과 없음
             return null;
         }
     }

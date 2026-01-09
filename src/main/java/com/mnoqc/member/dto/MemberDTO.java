@@ -20,8 +20,7 @@ public class MemberDTO {
         MemberDTO memberDTO = new MemberDTO();
         memberDTO.setId(memberEntity.getId());
         memberDTO.setMemberEmail(memberEntity.getMemberEmail());
-        memberDTO.setMemberPassword(memberEntity.getMemberPassword());
+        memberDTO.setMemberPassword(memberEntity.getMemberPassword()); // 주석처리 해야함. 혹은 response dto를 따로 만들어야한다.
         return memberDTO;
     }
-    // 이름은 회원가입 시 없어도 됨.
 }

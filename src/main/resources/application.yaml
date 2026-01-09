@@ -10,7 +10,7 @@ spring:
     password: 0902
 
   jpa:
-    # 2. 최신 하이버네이트용 방언 명시 (MySQL8Dialect가 아니라 MySQLDialect 사용)
+    # 2. 최신 하이버네이트용 방언 명시
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
       ddl-auto: update
@@ -18,3 +18,8 @@ spring:
       hibernate:
         format_sql: true
         show_sql: true
+
+server:
+  servlet:
+    session:
+      timeout: 60m  # 세션 초기화 시간을 60분으로 설정 (m:분, s:초, h:시간)
