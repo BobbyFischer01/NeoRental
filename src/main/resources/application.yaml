@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: member
+
+  datasource:
+    # 1. 접속 주소에 allowPublicKeyRetrieval=true 필수! (RSA 보안 문제 해결)
+    url: "jdbc:mysql://localhost:3306/member?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&useSSL=false&allowPublicKeyRetrieval=true"
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: 0902
+
+  jpa:
+    # 2. 최신 하이버네이트용 방언 명시 (MySQL8Dialect가 아니라 MySQLDialect 사용)
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
