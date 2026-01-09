@@ -47,5 +47,12 @@ public class MemberController {
             // 로그인 실패 logic
             return "login"; // 다시 로그인 페이지로
         }
+
+    }
+
+    @GetMapping("/member/logout")
+    public String logout(HttpSession session) {
+        session.invalidate(); // 세션 무효화
+        return "logout"; // logout.html 출력
     }
 }
